@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-
 namespace PropertyBind.Test;
 
 public class UnitTest1
@@ -20,7 +18,7 @@ public class UnitTest1
 [GeneratePropertyBind(nameof(Posts), nameof(Post.Blog))]
 public partial class Blog
 {
-	public ObservableCollection<Post> Posts { get; } = new();
+	public IList<Post> Posts { get; }
 }
 
 public class Post
