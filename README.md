@@ -64,3 +64,48 @@ public class Post
 Specify the property name of the collection in the first argument.
 
 In the second argument, specify the property name you want to associate with itself.
+
+## Note: auto-generated code
+
+### GeneratePropertyBindAttribute.cs
+```cs
+namespace PropertyBind
+{
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    internal sealed class GeneratePropertyBindAttribute : Attribute
+    {
+        public string ObservableCollectionPropertyName { get; } 
+        public string BindPropertyName { get; } 
+        public GeneratePropertyBindAttribute(string observableCollectionPropertyName, string bindPropertyName)
+        {
+            this.ObservableCollectionPropertyName = observableCollectionPropertyName;
+			this.BindPropertyName = bindPropertyName;
+        }
+    }
+}
+```
+
+### Blog.g.cs
+```cs
+using System.Collections.Specialized;
+
+public partial class Blog
+{
+	public Blog()
+	{
+		Posts.CollectionChanged += Posts_CollectionChanged;
+	}
+
+	private void Posts_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+	{
+		if (e.Action == NotifyCollectionChangedAction.Add)
+		{
+			if (e.NewItems == null) return;
+			foreach (Post item in e.NewItems)
+			{
+				item.Blog = this;
+			}
+		}
+	}
+}
+```
