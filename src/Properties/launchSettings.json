@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "PropBind": {
+      "commandName": "Project"
+    },
+    "profile1": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\tests\\PropertyBind.Test.csproj"
+    }
+  }
+}
