@@ -1,2 +1,66 @@
 # PropertyBind
+![GitHub](https://img.shields.io/github/license/mk3008/PropertyBind)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/mk3008/PropertyBind)
+![Github Last commit](https://img.shields.io/github/last-commit/mk3008/PropertyBind)  
+[![SqModel](https://img.shields.io/nuget/v/PropertyBind.svg)](https://www.nuget.org/packages/PropertyBind/) 
+[![SqModel](https://img.shields.io/nuget/dt/PropertyBind.svg)](https://www.nuget.org/packages/PropertyBind/) 
+
 Property synchronization process using Source Generator.
+
+## Demo
+Assume that the Blog class has a Post class collection, and the Post class has a Blog property.
+
+In this case, you need to write code like the following to synchronize the Blog class without any conflicts.
+
+```cs
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+
+public class Blog
+{
+	public ObservableCollection<Post> Posts { get; } = new();
+
+	public Blog()
+	{
+		Posts.CollectionChanged += Posts_CollectionChanged;
+	}
+
+	private void Posts_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+	{
+		if (e.Action == NotifyCollectionChangedAction.Add)
+		{
+			if (e.NewItems == null) return;
+			foreach (Post item in e.NewItems)
+			{
+				item.Blog = this;
+			}
+		}
+	}
+}
+
+public class Post
+{
+	public Blog Blog { get; set; } = null!;
+}
+```
+
+The above code is very tedious. Therefore, by using the SourceGenerator PropertyBind, you can write code with the same meaning as above using attributes.
+
+```cs
+using System.Collections.ObjectModel;
+
+[GeneratePropertyBind(nameof(Posts), nameof(Post.Blog))]
+public partial class Blog
+{
+	public ObservableCollection<Post> Posts { get; } = new();
+}
+
+public class Post
+{
+	public Blog Blog { get; set; } = null!;
+}
+```
+
+Specify the property name of the collection in the first argument.
+
+In the second argument, specify the property name you want to associate with itself.
