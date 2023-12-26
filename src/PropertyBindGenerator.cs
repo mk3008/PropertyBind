@@ -90,10 +90,12 @@ public partial class {{className}}
 {
 	public {{className}}()
 	{
-		{{collectionProperyName}}.CollectionChanged += {{collectionProperyName}}_CollectionChanged;
+		var lst = new ObservableCollection<{{genericTypeName}}>();
+		lst.CollectionChanged += __{{collectionProperyName}}_CollectionChanged;
+		{{collectionProperyName}} = lst;		
 	}
 
-	private void {{collectionProperyName}}_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+	private void __{{collectionProperyName}}_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
 	{
 		if (e.Action == NotifyCollectionChangedAction.Add)
 		{
@@ -119,6 +121,7 @@ public partial class {{className}}
 		var sb = new StringBuilder();
 
 		sb.AppendLine("""
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 """);
 
