@@ -14,12 +14,13 @@
 		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 		<IsRoslynComponent>true</IsRoslynComponent>
 		<Title></Title>
-		<Version>0.1.0</Version>
+		<Version>0.1.1</Version>
 		<Copyright>mk3008net</Copyright>
 		<Authors>mk3008net</Authors>
 		<Description>Property synchronization process using Source Generator.</Description>
 		<RepositoryUrl>https://github.com/mk3008/PropertyBind.git</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageProjectUrl>https://github.com/mk3008/PropertyBind</PackageProjectUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
