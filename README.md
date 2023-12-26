@@ -47,12 +47,10 @@ public class Post
 The above code is very tedious. Therefore, by using the SourceGenerator PropertyBind, you can write code with the same meaning as above using attributes.
 
 ```cs
-using System.Collections.ObjectModel;
-
 [GeneratePropertyBind(nameof(Posts), nameof(Post.Blog))]
 public partial class Blog
 {
-	public ObservableCollection<Post> Posts { get; } = new();
+	public IList<Post> Posts { get; }
 }
 
 public class Post
@@ -93,10 +91,12 @@ public partial class Blog
 {
 	public Blog()
 	{
-		Posts.CollectionChanged += Posts_CollectionChanged;
+		var lst = new ObservableCollection<Post>();
+		lst.CollectionChanged += __Posts_CollectionChanged;
+		Posts = lst
 	}
 
-	private void Posts_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+	private void __Posts_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
 	{
 		if (e.Action == NotifyCollectionChangedAction.Add)
 		{
