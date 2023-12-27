@@ -46,7 +46,9 @@ public class Post
 }
 ```
 
-The above code is very tedious. Therefore, by using the SourceGenerator PropertyBind, you can write code with the same meaning as above using attributes.
+The above code is boring.
+
+By using SourceGenerator PropertyBind, you can write a shorter code with the same meaning as above.
 
 ```cs
 [GeneratePropertyBind(nameof(Posts), nameof(Post.Blog))]
