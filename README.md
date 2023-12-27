@@ -67,6 +67,20 @@ Specify the property name of the collection in the first argument.
 
 In the second argument, specify the property name you want to associate with itself.
 
+When executed, the following behavior occurs.
+```cs
+[Fact]
+public void Test1()
+{
+	var blog = new Blog();
+	var post = new Post() { Blog = new Blog() };
+
+	Assert.NotEqual(blog, post.Blog);
+	blog.Posts.Add(post);
+	Assert.Equal(blog, post.Blog);
+}
+```
+
 ## Note: auto-generated code
 
 ### GeneratePropertyBindAttribute.cs
