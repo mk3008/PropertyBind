@@ -13,12 +13,27 @@ public class UnitTest1
 		blog.Posts.Add(post);
 		Assert.Equal(blog, post.Blog);
 	}
+
+	[Fact]
+	public void Test2()
+	{
+		var blog = new Blog();
+
+		var post = new Post() { Blog = new Blog() };
+
+		Assert.NotEqual(blog, post.Blog);
+		blog.Posts2.Add(post);
+		Assert.Equal(blog, post.Blog);
+	}
 }
 
 [GeneratePropertyBind(nameof(Posts), nameof(Post.Blog))]
+[GeneratePropertyBind(nameof(Posts2), nameof(Post.Blog))]
 public partial class Blog
 {
 	public IList<Post> Posts { get; }
+
+	public IList<Post> Posts2 { get; }
 }
 
 public class Post

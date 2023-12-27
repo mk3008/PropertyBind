@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text;
+using static PropertyBind.EmitHelper;
 
 namespace PropertyBind;
 
@@ -24,7 +25,7 @@ public partial class PropertyBindGenerator : IIncrementalGenerator
 		context.AddSource("GeneratePropertyBindAttribute.cs", """
 namespace PropertyBind
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     internal sealed class GeneratePropertyBindAttribute : Attribute
     {
         public string ObservableCollectionPropertyName { get; } 
@@ -41,22 +42,34 @@ namespace PropertyBind
 
 	static void Emit(SourceProductionContext context, GeneratorAttributeSyntaxContext source)
 	{
-		var attr = source.Attributes[0]; // allowMultiple:false
-		ExtractAttribute(attr, out var collectionProperyName, out var bindPropertyName);
-		if (string.IsNullOrEmpty(collectionProperyName)) return;
-		if (string.IsNullOrEmpty(bindPropertyName)) return;
+		var code = new StringBuilder();
+		var collectionPropertyNames = new List<string>();
 
-		ExtractGenericType(source, collectionProperyName, out var genericType);
-		if (genericType == null) return;
+		foreach (var attr in source.Attributes)
+		{
 
-		// Generate Code
-		var code = GenerateCode(
-			source.TargetSymbol.Name,
-			collectionProperyName,
-			genericType.Name,
-			bindPropertyName
-		);
-		AddSource(context, source.TargetSymbol, code);
+			ExtractAttribute(attr, out var collectionProperyName, out var bindPropertyName);
+			if (string.IsNullOrEmpty(collectionProperyName)) continue;
+			if (string.IsNullOrEmpty(bindPropertyName)) continue;
+
+			ExtractGenericType(source, collectionProperyName, out var genericType);
+			if (genericType == null) continue;
+
+			collectionPropertyNames.Add(collectionProperyName);
+
+			// Generate Code
+			var text = GenerateInitializeCode(
+							source.TargetSymbol.Name,
+							collectionProperyName,
+							genericType.Name,
+							bindPropertyName
+						);
+			code.AppendLine(text);
+		}
+
+		code.Append(GenerateConstructorCode(source.TargetSymbol.Name, collectionPropertyNames));
+
+		AddSource(context, source.TargetSymbol, code.ToString());
 	}
 
 	static void ExtractGenericType(GeneratorAttributeSyntaxContext source, string collectionProperyName, out ITypeSymbol? symbol)
@@ -82,31 +95,46 @@ namespace PropertyBind
 		bindPropertyName = (string)attributeData.ConstructorArguments[1].Value!;
 	}
 
-	static string GenerateCode(string className, string collectionProperyName, string genericTypeName, string bindPropertyName)
+	static string GenerateInitializeCode(string className, string collectionProperyName, string genericTypeName, string bindPropertyName)
 	{
 		var code = new StringBuilder();
 		code.AppendLine($$"""
-public partial class {{className}}
-{
-	public {{className}}()
+	public partial class {{className}}
 	{
-		var lst = new ObservableCollection<{{genericTypeName}}>();
-		lst.CollectionChanged += __{{collectionProperyName}}_CollectionChanged;
-		{{collectionProperyName}} = lst;		
-	}
-
-	private void __{{collectionProperyName}}_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-	{
-		if (e.Action == NotifyCollectionChangedAction.Add)
+		private ObservableCollection<{{genericTypeName}}> __Create{{collectionProperyName}}()
 		{
-			if (e.NewItems == null) return;
-			foreach ({{genericTypeName}} item in e.NewItems)
+			var lst = new ObservableCollection<{{genericTypeName}}>();
+			lst.CollectionChanged += __{{collectionProperyName}}_CollectionChanged;
+			return lst;		
+		}
+
+		private void __{{collectionProperyName}}_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+		{
+			if (e.Action == NotifyCollectionChangedAction.Add)
 			{
-				item.{{bindPropertyName}} = this;
+				if (e.NewItems == null) return;
+				foreach ({{genericTypeName}} item in e.NewItems)
+				{
+					item.{{bindPropertyName}} = this;
+				}
 			}
 		}
 	}
-}
+""");
+		return code.ToString();
+	}
+
+	static string GenerateConstructorCode(string className, List<string> collectionProperyNames)
+	{
+		var code = new StringBuilder();
+		code.AppendLine($$"""
+	public partial class {{className}}
+	{
+		public {{className}}()
+		{
+{{ForEachLine("            ", collectionProperyNames, (x) => $"{x} = __Create{x}();")}}
+		}
+	}
 """);
 		return code.ToString();
 	}
@@ -121,6 +149,8 @@ public partial class {{className}}
 		var sb = new StringBuilder();
 
 		sb.AppendLine("""
+#nullable enable
+
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 """);
