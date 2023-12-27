@@ -8,9 +8,11 @@
 Property synchronization process using Source Generator.
 
 ## Demo
-Assume that the Blog class has a Post class collection, and the Post class has a Blog property.
+Suppose that the Blog class has a Post class collection property, and the Post class has a Blog property.
 
-In this case, you need to write code like the following to synchronize the Blog class without any conflicts.
+When handling a common Blog instance between two classes, it is necessary to detect when an item is added to the collection property and set itself to the Blog property.
+
+Specifically, you need to write the following code.
 
 ```cs
 using System.Collections.ObjectModel;
