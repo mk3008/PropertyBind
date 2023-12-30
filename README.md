@@ -51,6 +51,8 @@ The above code is boring.
 By using SourceGenerator PropertyBind, you can write a shorter code with the same meaning as above.
 
 ```cs
+namespace PropertyBind.Test;
+
 [GeneratePropertyBind(nameof(Posts), nameof(Post.Blog))]
 public partial class Blog
 {
@@ -70,6 +72,8 @@ In the second argument, specify the property name you want to associate with its
 When executed, the following behavior occurs.
 ```cs
 [Fact]
+namespace PropertyBind.Test;
+
 public void Test1()
 {
 	var blog = new Blog();
@@ -81,13 +85,13 @@ public void Test1()
 }
 ```
 
-## Note: auto-generated code
+## NOTE: auto-generated code
 
 ### GeneratePropertyBindAttribute.cs
 ```cs
 namespace PropertyBind
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     internal sealed class GeneratePropertyBindAttribute : Attribute
     {
         public string ObservableCollectionPropertyName { get; } 
@@ -103,27 +107,48 @@ namespace PropertyBind
 
 ### Blog.g.cs
 ```cs
+#nullable enable
+
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+namespace PropertyBind.Test {
 
-public partial class Blog
-{
-	public Blog()
+	public partial class Blog
 	{
-		var lst = new ObservableCollection<Post>();
-		lst.CollectionChanged += __Posts_CollectionChanged;
-		Posts = lst
-	}
-
-	private void __Posts_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-	{
-		if (e.Action == NotifyCollectionChangedAction.Add)
+		private ObservableCollection<global::PropertyBind.Test.Post> __CreatePosts()
 		{
-			if (e.NewItems == null) return;
-			foreach (Post item in e.NewItems)
+			var lst = new ObservableCollection<global::PropertyBind.Test.Post>();
+			lst.CollectionChanged += __Posts_CollectionChanged;
+			return lst;		
+		}
+
+		private void __Posts_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+		{
+			if (e.Action == NotifyCollectionChangedAction.Add)
 			{
-				item.Blog = this;
+				if (e.NewItems == null) return;
+				foreach (global::PropertyBind.Test.Post item in e.NewItems)
+				{
+					item.Blog = this;
+				}
 			}
 		}
 	}
+
+	public partial class Blog
+	{
+		public Blog()
+		{
+            Posts = __CreatePosts();
+		}
+	}
+
 }
+
 ```
+
+## Constraints
+- The type of observableCollectionPropertyName must be compatible with the ObservableCollection<T> type.
+- For interfaces, ObservableCollection<T> is used.
+- For classes, there must be a constructor with no arguments.
+
