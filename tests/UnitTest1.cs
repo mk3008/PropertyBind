@@ -1,3 +1,5 @@
+using PropertyBind.Test.SomeoneNamespace;
+
 namespace PropertyBind.Test;
 
 public class UnitTest1
@@ -33,7 +35,7 @@ public partial class Blog
 {
 	public IList<Post> Posts { get; }
 
-	public IList<Post> Posts2 { get; }
+	public CustomCollection<Post> Posts2 { get; }
 }
 
 public class Post
@@ -60,5 +62,4 @@ public class Post
 //		}
 //	}
 //}
-
 

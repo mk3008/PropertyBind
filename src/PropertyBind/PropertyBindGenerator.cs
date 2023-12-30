@@ -52,8 +52,7 @@ namespace PropertyBind
 			if (string.IsNullOrEmpty(collectionProperyName)) continue;
 			if (string.IsNullOrEmpty(bindPropertyName)) continue;
 
-			ExtractGenericType(source, collectionProperyName, out var genericType);
-			if (genericType == null) continue;
+			if (TryExtract(source, collectionProperyName, out var propType, out var genericType) == false) continue;
 
 			collectionPropertyNames.Add(collectionProperyName);
 
@@ -61,7 +60,8 @@ namespace PropertyBind
 			var text = GenerateInitializeCode(
 							source.TargetSymbol.Name,
 							collectionProperyName,
-							genericType.Name,
+							propType,
+							genericType,
 							bindPropertyName
 						);
 			code.AppendLine(text);
@@ -72,15 +72,19 @@ namespace PropertyBind
 		AddSource(context, source.TargetSymbol, code.ToString());
 	}
 
-	static void ExtractGenericType(GeneratorAttributeSyntaxContext source, string collectionProperyName, out ITypeSymbol? symbol)
+	static bool TryExtract(GeneratorAttributeSyntaxContext source, string collectionProperyName, out INamedTypeSymbol propertyType, out ITypeSymbol genericType)
 	{
-		symbol = null;
+		propertyType = null!;
+		genericType = null!;
 		var property = ((INamedTypeSymbol)source.TargetSymbol).GetMembers().Where(x => x.Name == collectionProperyName).FirstOrDefault();
-		if (property is null) return;
+		if (property is null) return false;
 		if (property is IPropertySymbol p && p.Type is INamedTypeSymbol n && n.IsGenericType)
 		{
-			symbol = n.TypeArguments[0];
+			propertyType = n;
+			genericType = n.TypeArguments[0];
+			return true;
 		}
+		return false;
 	}
 
 	static void ExtractAttribute(AttributeData attributeData, out string observableCollectionPropertyName, out string bindPropertyName)
@@ -95,15 +99,21 @@ namespace PropertyBind
 		bindPropertyName = (string)attributeData.ConstructorArguments[1].Value!;
 	}
 
-	static string GenerateInitializeCode(string className, string collectionProperyName, string genericTypeName, string bindPropertyName)
+	static string GenerateInitializeCode(string className, string collectionProperyName, ITypeSymbol collectionType, ITypeSymbol genericType, string bindPropertyName)
 	{
+		var genericTypeFullName = genericType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+		// If it is an interface, initialize it with ObservableCollection<T>.
+		var collectionTypeFullName = collectionType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+		if (collectionType.TypeKind == TypeKind.Interface) collectionTypeFullName = $"ObservableCollection<{genericTypeFullName}>";
+
 		var code = new StringBuilder();
 		code.AppendLine($$"""
 	public partial class {{className}}
 	{
-		private ObservableCollection<{{genericTypeName}}> __Create{{collectionProperyName}}()
+		private {{collectionTypeFullName}} __Create{{collectionProperyName}}()
 		{
-			var lst = new ObservableCollection<{{genericTypeName}}>();
+			var lst = new {{collectionTypeFullName}}();
 			lst.CollectionChanged += __{{collectionProperyName}}_CollectionChanged;
 			return lst;		
 		}
@@ -113,7 +123,7 @@ namespace PropertyBind
 			if (e.Action == NotifyCollectionChangedAction.Add)
 			{
 				if (e.NewItems == null) return;
-				foreach ({{genericTypeName}} item in e.NewItems)
+				foreach ({{genericTypeFullName}} item in e.NewItems)
 				{
 					item.{{bindPropertyName}} = this;
 				}
