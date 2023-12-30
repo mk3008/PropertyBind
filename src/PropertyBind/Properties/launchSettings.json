@@ -5,7 +5,7 @@
     },
     "profile1": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "..\\tests\\PropertyBind.Test.csproj"
+      "targetProject": "..\\..\\tests\\PropertyBind.Test.csproj"
     }
   }
 }

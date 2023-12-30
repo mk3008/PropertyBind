@@ -24,7 +24,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\src\PropertyBind\PropertyBind.csproj" />
-		<ProjectReference Include="..\src\PropertyBind\PropertyBind.csproj" >
+		<ProjectReference Include="..\src\PropertyBind\PropertyBind.csproj">
 			<OutputItemType>Analyzer</OutputItemType>
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 		</ProjectReference>
